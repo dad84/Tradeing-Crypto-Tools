@@ -6,7 +6,7 @@ This is a Python script that fetches 24-hour ticker data from Binance API and fi
 To use this script, you will need:
 
 Python 3 installed on your system
-Binance API key and secret
+
 ### Installation
 
 1. Clone the repository:
