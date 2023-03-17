@@ -9,9 +9,8 @@ Python 3 installed on your system
 
 ### Installation
 
-1. Clone the repository:
+1. Clone the repository
 
-`git clone https://github.com/example-user/binance-volume-increase-detector.git`
 
 2. Install the required Python packages:
 
