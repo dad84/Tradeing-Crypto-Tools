@@ -26,3 +26,5 @@ The script will fetch 24-hour ticker data from the Binance API and filter the sy
 
 ### Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
+
+![Image](/volume.png "Volume")
