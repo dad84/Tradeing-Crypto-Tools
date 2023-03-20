@@ -151,6 +151,10 @@ def place_limit_order_with_trailing_stop(side, price, stop_loss_percentage):
 
 # Define main function
 def main():
+    news_update_interval = 15 * 60  # 15 minutes in seconds
+    loop_sleep_time = 10  # 10 seconds
+    news_counter = 0
+
     while True:
         # Get market data
         market_data = get_market_data()
@@ -160,9 +164,10 @@ def main():
         ma_data = calculate_moving_averages()
         print(ma_data)
 
-        # Get news sentiment
-        news_sentiment = get_news_sentiment(symbol)
-        print(f"News sentiment: {news_sentiment}")
+        # Get news sentiment every 15 minutes
+        if news_counter == 0:
+            news_sentiment = get_news_sentiment(symbol)
+            print(f"News sentiment: {news_sentiment}")
 
         # Detect breakouts
         breakout_up, breakout_down = is_breakout(symbol, long_ma_period, market_data['last_price'])
@@ -176,9 +181,8 @@ def main():
             place_limit_order_with_trailing_stop('Sell', market_data['sell_price'], stop_loss_percentage)
 
         # Sleep for some time before the next iteration
-        time.sleep(900)
+        time.sleep(loop_sleep_time)
+        news_counter = (news_counter + loop_sleep_time) % news_update_interval
 
 if __name__ == '__main__':
     main()
-
-
