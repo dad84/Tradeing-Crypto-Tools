@@ -8,8 +8,8 @@ from nltk.sentiment import SentimentIntensityAnalyzer
 from datetime import datetime, timedelta
 
 # Set Bitmex API credentials
-api_key = 'api_key'
-api_secret = 'api_secret'
+api_key = 'api_key' # Replace with your own API key
+api_secret = 'api_secret'  # Replace with your own API secret
 
 # Define Bitmex API endpoints
 api_base_url = 'https://testnet.bitmex.com/api/v1'
@@ -28,7 +28,7 @@ buy_threshold = 0.01
 sell_threshold = -0.01
 
 # Risk management parameters
-stop_loss_percentage = 0.10  # 10% stop-loss
+stop_loss_percentage = 0.02  # 2% trailing stop-loss
 
 # Fundamental analysis parameters
 news_api_key = 'api_key'  # Replace with your own News API key
@@ -103,8 +103,8 @@ def is_breakout(symbol, period, last_price):
 
     return breakout_up, breakout_down
 
-# Define function to place limit order
-def place_limit_order(side, price):
+# Define function to place limit order with trailing stop-loss
+def place_limit_order_with_trailing_stop(side, price, stop_loss_percentage):
     order_data = {'symbol': symbol, 'orderQty': quantity, 'price': price, 'ordType': 'Limit', 'side': side}
     expires = str(int(round(time.time())) + 5)
     verb = 'POST'
@@ -122,8 +122,39 @@ def place_limit_order(side, price):
     order_status = response.json()
     print(order_status)
 
+    if order_status.get("orderID"):
+        order_id = order_status["orderID"]
+        trailing_stop_data = {
+            'symbol': symbol,
+            'pegPriceType': 'TrailingStop',
+            'pegOffsetValue': -stop_loss_percentage * price,  # Negative for buy, positive for sell
+            'ordType': 'Stop',
+            'side': 'Sell' if side == 'Buy' else 'Buy',
+            'execInst': 'LastPrice',
+            'orderQty': quantity,
+        }
+        expires = str(int(round(time.time())) + 5)
+        verb = 'POST'
+        path = '/api/v1/order'
+        data = json.dumps(trailing_stop_data)
+        message = verb + path + expires + data
+        signature = hmac.new(api_secret.encode(), message.encode(), digestmod=hashlib.sha256).hexdigest()
+        headers = {
+            'api-expires': expires,
+            'api-key': api_key,
+            'api-signature': signature,
+            'Content-Type': 'application/json'
+        }
+        response = requests.post(api_orders_url, headers=headers, json=trailing_stop_data)
+        stop_order_status = response.json()
+        print(stop_order_status)
+
 # Define main function
 def main():
+    news_update_interval = 15 * 60  # 15 minutes in seconds
+    loop_sleep_time = 10  # 10 seconds
+    news_counter = 0
+
     while True:
         # Get market data
         market_data = get_market_data()
@@ -133,9 +164,10 @@ def main():
         ma_data = calculate_moving_averages()
         print(ma_data)
 
-        # Get news sentiment
-        news_sentiment = get_news_sentiment(symbol)
-        print(f"News sentiment: {news_sentiment}")
+        # Get news sentiment every 15 minutes
+        if news_counter == 0:
+            news_sentiment = get_news_sentiment(symbol)
+            print(f"News sentiment: {news_sentiment}")
 
         # Detect breakouts
         breakout_up, breakout_down = is_breakout(symbol, long_ma_period, market_data['last_price'])
@@ -143,17 +175,14 @@ def main():
 
         # Place orders based on moving average crossover strategy, news sentiment, and breakouts
         if ma_data['short_ma'] > ma_data['long_ma'] * (1 + buy_threshold) and news_sentiment > 0 and breakout_up:
-            place_limit_order('Buy', market_data['buy_price'])
-            stop_loss_price = market_data['buy_price'] * (1 - stop_loss_percentage)
-            place_limit_order('Stop', stop_loss_price)
+            place_limit_order_with_trailing_stop('Buy', market_data['buy_price'], stop_loss_percentage)
 
         elif ma_data['short_ma'] < ma_data['long_ma'] * (1 + sell_threshold) and news_sentiment < 0 and breakout_down:
-            place_limit_order('Sell', market_data['sell_price'])
-            stop_loss_price = market_data['sell_price'] * (1 + stop_loss_percentage)
-            place_limit_order('Stop', stop_loss_price)
+            place_limit_order_with_trailing_stop('Sell', market_data['sell_price'], stop_loss_percentage)
 
-        # Wait for next iteration
-        time.sleep(900)
+        # Sleep for some time before the next iteration
+        time.sleep(loop_sleep_time)
+        news_counter = (news_counter + loop_sleep_time) % news_update_interval
 
 if __name__ == '__main__':
     main()
