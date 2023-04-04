@@ -1,4 +1,4 @@
-trading_signals/
+`` trading_signals/
     ├── app/
     │   ├── __init__.py
     │   ├── api_clients/
@@ -17,3 +17,4 @@ trading_signals/
     ├── config.py
     ├── main.py
     └── requirements.txt
+``
