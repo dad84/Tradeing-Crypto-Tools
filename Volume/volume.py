@@ -293,7 +293,20 @@ def generate_html_content(last_5_signals, logo_urls):
 def save_html_file(html_content, file_name="potential_buy_signals.html"):
     with open(file_name, "w") as f:
         f.write(html_content)
-        
+
+def reconnect():
+    time.sleep(5)  # Wait for 5 seconds before attempting to reconnect
+    print("Attempting to reconnect to WebSocket...")
+    main()  # Call the main function to reconnect
+    
+def on_error(ws, error):
+    print(f"WebSocket error: {error}")
+    reconnect()
+
+def on_close(ws):
+    print("WebSocket closed")
+    reconnect() 
+
 # Main function to fetch data, filter symbols, and generate the HTML report
 def main():
     interval = "1h"
@@ -329,9 +342,10 @@ def main():
     ws = websocket.WebSocketApp(
         ws_url,
         on_message=on_message,
-        on_error=lambda ws, error: print(f"WebSocket error: {error}"),
-        on_close=lambda ws: print("WebSocket closed"),
+        on_error=on_error,  # Update the on_error callback
+        on_close=on_close,  # Update the on_close callback
     )
+
 
     # Start a new thread for the WebSocket connection
     ws_thread = Thread(target=ws.run_forever)
@@ -342,7 +356,7 @@ def main():
             time.sleep(1)
     except KeyboardInterrupt:
         ws.close()
-        ws_thread.join()
+        ws_thread.join()   
 
 # Run the main function when the script is executed
 if __name__ == "__main__":
