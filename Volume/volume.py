@@ -10,6 +10,8 @@ from ta.momentum import RSIIndicator
 from ta.trend import MACD
 from ta.utils import dropna
 import pandas as pd
+import websocket  # Import the websocket library
+from threading import Thread
 
 # Set the Binance API endpoint
 api_url = "https://api.binance.com"
@@ -298,10 +300,12 @@ def main():
     last_5_signals = []
     logo_urls = fetch_coin_logo_urls()
 
+    # Define previous_ticker_data as an empty list
     previous_ticker_data = []
 
-    while True:
-        current_ticker_data = fetch_24hr_ticker_price_change()
+    def on_message(ws, message):
+        current_ticker_data = json.loads(message)
+
         potential_symbols = filter_symbols_with_potential_volume_increase(
             current_ticker_data, previous_ticker_data, min_volume_increase_pct, interval
         )
@@ -315,11 +319,31 @@ def main():
         else:
             print("No symbols with potential price increase found")
 
-        previous_ticker_data = current_ticker_data
-
         print(f"Waiting {fetch_interval} seconds before the next fetch...")
         time.sleep(fetch_interval)
-        
+
+    # WebSocket URL for Binance API
+    ws_url = "wss://stream.binance.com:9443/ws/!ticker@arr"
+
+    # Create a WebSocket connection
+    ws = websocket.WebSocketApp(
+        ws_url,
+        on_message=on_message,
+        on_error=lambda ws, error: print(f"WebSocket error: {error}"),
+        on_close=lambda ws: print("WebSocket closed"),
+    )
+
+    # Start a new thread for the WebSocket connection
+    ws_thread = Thread(target=ws.run_forever)
+    ws_thread.start()
+
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        ws.close()
+        ws_thread.join()
+
 # Run the main function when the script is executed
 if __name__ == "__main__":
     main()
