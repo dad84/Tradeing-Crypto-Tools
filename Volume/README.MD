@@ -1,23 +1,48 @@
-# Binance Potential Buy Signals
+# Potential Buy Signals
 
-This Python script is a tool to identify potential cryptocurrency buy signals on the Binance exchange based on sudden volume increases and price movement above a specified moving average.
+This Python script fetches trading data from the Binance API and identifies potential buy signals based on the following criteria:
+
+1. The trading volume has increased by a specified percentage (e.g., 10%).
+2. The current price is above the moving average (e.g., 20 periods).
+
+The script periodically saves the last five potential buy signals to an HTML file that can be opened in a web browser.
 
 ## Features
-- Fetches 24-hour ticker data and klines data from Binance's API
-- Filters trading pairs with significant volume increase
-- Calculates the moving average and filters pairs with price above the moving average
-- Fetches coin logo URLs from CoinGecko API and displays the base coin logo
-- Continuously updates the generated HTML file with the latest potential buy signals
 
-## Output
-The script generates an HTML file displaying the last 5 potential buy signals, including the following information for each pair:
-- Symbol
-- Volume change
-- Price change
-- Direction (Up or Down)
-- Moving average
-- Current price
-- Link to trade the pair on Binance
+- Fetches 24-hour ticker price change data from the Binance API
+- Calculates the moving average for specified trading pairs
+- Filters symbols with potential volume increase and above the moving average
+- Fetches coin logo URLs from the CoinGecko API
+- Generates an HTML file with the last five potential buy signals
+- Automatically refreshes the data at a specified interval
+
+## Requirements
+
+- Python 3.x
+- Requests library
 
 ## Usage
-Run the script to continuously fetch data at a specified interval and update the HTML file with the latest potential buy signals.
+
+1. Install the Requests library if you don't have it installed:
+
+`` pip install requests ``
+
+
+2. Edit the following parameters in the script according to your preferences:
+
+`` min_volume_increase_pct = 10 ``
+`` fetch_interval = 10 ``
+`` moving_average_window = 20 ``
+
+
+3. Run the script:
+
+`` python3 volume.py ``
+
+
+4. Open the generated HTML file (`potential_buy_signals.html`) in a web browser.
+
+## Notes
+
+- This script is for educational purposes only. It does not provide any financial advice or recommendations. Trade at your own risk.
+- The Binance API may have rate limits. Make sure not to exceed them by adjusting the `fetch_interval` parameter accordingly.
