@@ -42,8 +42,10 @@ The script periodically saves the last five potential buy signals to an HTML fil
 
 4. Open the generated HTML file (`potential_buy_signals.html`) in a web browser.
 
-![Volume Example](https://github.com/dad84/Tradeing-Crypto-Tools/blob/main/Volume/video.webm?raw=true)
-
+<video width="320" height="240" controls>
+  <source src="video.webm" type="video/webm">
+  Your browser does not support the video tag.
+</video>
 ## Notes
 
 - This script is for educational purposes only. It does not provide any financial advice or recommendations. Trade at your own risk.
